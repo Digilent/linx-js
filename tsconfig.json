@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": ["node"],
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "declaration": true,
+    "outDir": "./dist"
+  },
+  "files": [
+    "src/connection-handler/connection-handler.ts",
+    "src/linx-agent/linx-agent.ts",
+    "src/linx-device/linx-device.ts",
+    "src/transports/generic-transport.ts",
+    "src/transports/http-transport.ts"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@digilent/linx-js",
+  "version": "0.0.0",
+  "description": "LINX javascript library",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine-node spec/core.js",
+    "prepublish": "npm run build",
+    "clean": "rm -rf dist && rm -rf bundle",
+    "docs": "typedoc --out ./docs ./src",
+    "build": "npm run clean && tsc && webpack bundleHelper.js ./bundle/linx-js.js && npm run docs"
+  },
+  "author": "digilent",
+  "license": "MIT",
+  "devDependencies": {    
+    "@types/node": "^7.0.12",
+    "typescript": "2.0.10",
+    "uglify-js": "^3.0.28",
+    "webpack": "^3.5.3",
+    "typedoc": "0.8.0"
+  }
+}
