@@ -1,7 +1,9 @@
-import { GenericTransportService } from './generic-transport';
-export declare class HttpTransportService extends GenericTransportService {
+import { GenericTransport } from '@digilent/linx-device-js';
+export declare class HttpTransportService extends GenericTransport {
+    address: string;
+    endpoint: string;
     start: number;
     finish: number;
-    constructor();
-    writeRead(address: string, endpoint: string, data: any, returnType: 'binary' | 'json'): Promise<any>;
+    constructor(address: string, endpoint: string);
+    writeRead(data: any): Promise<any>;
 }

@@ -4,29 +4,29 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var generic_transport_1 = require('./generic-transport');
+var linx_device_js_1 = require('@digilent/linx-device-js');
 var HttpTransportService = (function (_super) {
     __extends(HttpTransportService, _super);
-    function HttpTransportService() {
+    function HttpTransportService(address, endpoint) {
         _super.call(this);
+        this.address = address;
+        this.endpoint = endpoint;
         this.start = 0;
         this.finish = 0;
         console.log('HttpTransportService constructor');
     }
-    HttpTransportService.prototype.writeRead = function (address, endpoint, data, returnType) {
+    HttpTransportService.prototype.writeRead = function (data) {
         var _this = this;
-        var uri = address + endpoint;
+        var uri = this.address + this.endpoint;
         console.log(uri);
         return new Promise(function (resolve, reject) {
             var XHR = new XMLHttpRequest();
-            // We define what will happen if the data are successfully sent
             XHR.addEventListener("load", function (event) {
                 console.log(event.currentTarget.response);
                 _this.finish = performance.now();
                 console.log('FLIGHT TIME: ' + (_this.finish - _this.start));
                 resolve(event.currentTarget.response);
             });
-            // We define what will happen in case of error
             XHR.addEventListener("error", function (event) {
                 reject(event);
             });
@@ -37,10 +37,7 @@ var HttpTransportService = (function (_super) {
             try {
                 XHR.open("POST", uri);
                 XHR.timeout = 5000;
-                if (returnType === 'binary') {
-                    //Set response type as arraybuffer to receive response as bytes
-                    XHR.responseType = 'arraybuffer';
-                }
+                XHR.responseType = 'arraybuffer';
                 _this.start = performance.now();
                 XHR.send(data);
             }
@@ -50,6 +47,6 @@ var HttpTransportService = (function (_super) {
         });
     };
     return HttpTransportService;
-}(generic_transport_1.GenericTransportService));
+}(linx_device_js_1.GenericTransport));
 exports.HttpTransportService = HttpTransportService;
 //# sourceMappingURL=http-transport.js.map

@@ -60,43 +60,65 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-var http_transport_1 = __webpack_require__(4);
-var ConnectionHandlerService = (function () {
-    function ConnectionHandlerService() {
-        console.log('ConnectionHandlerService constructor');
-        this.transport = new http_transport_1.HttpTransportService();
-    }
-    ConnectionHandlerService.prototype.setHttpTransport = function () {
-        this.transport = new http_transport_1.HttpTransportService();
-        this.transportType = 'http';
-    };
-    return ConnectionHandlerService;
-}());
-exports.ConnectionHandlerService = ConnectionHandlerService;
-//# sourceMappingURL=connection-handler.js.map
+exports.LinxDevice = __webpack_require__(3).LinxDevice;
+exports.GenericTransport = __webpack_require__(4).GenericTransport
 
 /***/ }),
 /* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dist_linx_device_manager_linx_device_manager__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dist_linx_device_manager_linx_device_manager___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__dist_linx_device_manager_linx_device_manager__);
+
+window.LinxDeviceManager = __WEBPACK_IMPORTED_MODULE_0__dist_linx_device_manager_linx_device_manager__["LinxDeviceManager"];
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var connection_handler_1 = __webpack_require__(0);
+var linx_device_js_1 = __webpack_require__(0);
+var http_transport_1 = __webpack_require__(5);
+var LinxDeviceManager = (function () {
+    function LinxDeviceManager() {
+    }
+    LinxDeviceManager.prototype.addDevice = function (address, endpoint, connectionType) {
+        if (connectionType === void 0) { connectionType = 'http'; }
+        var transport;
+        switch (connectionType) {
+            case 'http':
+                transport = new http_transport_1.HttpTransportService(address, endpoint);
+                break;
+            default:
+                throw 'invalid connection type';
+        }
+        return new linx_device_js_1.LinxDevice(transport);
+    };
+    return LinxDeviceManager;
+}());
+exports.LinxDeviceManager = LinxDeviceManager;
+//# sourceMappingURL=linx-device-manager.js.map
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var LinxDevice = (function () {
-    function LinxDevice(deviceAddress) {
+    function LinxDevice(transport) {
+        this.transport = transport;
         this.packetNumber = 0;
-        this.connectionHandlerService = new connection_handler_1.ConnectionHandlerService();
-        this.deviceAddress = deviceAddress;
-        console.log('DeviceService constructor');
     }
     /**************************************************************************
     *   Device
@@ -930,6 +952,12 @@ var LinxDevice = (function () {
     /**************************************************************************
     *   UART
     **************************************************************************/
+    /**
+     * Uart open on the specified channel and initialize to a specific baud rate.
+     * @param channel the desired channel
+     * @param baud the desired baud rate
+     * @return Promise that resolves with an object containing a message, the actual baud rate, and a statusCode
+     */
     LinxDevice.prototype.uartOpen = function (channel, baud) {
         var _this = this;
         var uartInfo = new Uint8Array(5);
@@ -955,6 +983,12 @@ var LinxDevice = (function () {
             });
         });
     };
+    /**
+     * Set baud rate on the specified channel.
+     * @param channel the desired channel
+     * @param baud the desired baud rate
+     * @return Promise that resolves with an object containing a message, the actual baud rate, and a statusCode
+     */
     LinxDevice.prototype.uartSetBaudRate = function (channel, baud) {
         var _this = this;
         var uartInfo = new Uint8Array(5);
@@ -980,6 +1014,11 @@ var LinxDevice = (function () {
             });
         });
     };
+    /**
+     * Uart get bytes available on the specified channel.
+     * @param channel the desired channel
+     * @return Promise that resolves with an object containing a message, the number of bytes, and a statusCode
+     */
     LinxDevice.prototype.uartGetBytesAvailable = function (channel) {
         var _this = this;
         var commandParams = new Uint8Array(1);
@@ -1003,6 +1042,12 @@ var LinxDevice = (function () {
             });
         });
     };
+    /**
+     * Uart read a specific number of bytes on the specified channel.
+     * @param channel the desired channel
+     * @param numBytes the number of bytes to read
+     * @return Promise that resolves with an object containing a message, a byte array of data, and a statusCode
+     */
     LinxDevice.prototype.uartRead = function (channel, numBytes) {
         var _this = this;
         var commandParams = new Uint8Array(2);
@@ -1031,6 +1076,12 @@ var LinxDevice = (function () {
             });
         });
     };
+    /**
+     * Uart write on the specified channel.
+     * @param channel the desired channel
+     * @param data the byte array to send
+     * @return Promise that resolves with an object containing a message and a statusCode
+     */
     LinxDevice.prototype.uartWrite = function (channel, data) {
         var uartInfo = new Uint8Array(1 + data.length);
         uartInfo[0] = channel;
@@ -1039,6 +1090,11 @@ var LinxDevice = (function () {
         var packet = this.generatePacket(this.getPacketSize(uartInfo), 196, uartInfo);
         return this.genericReturnHandler(packet);
     };
+    /**
+     * Uart close on the specified channel.
+     * @param channel the desired channel
+     * @return Promise that resolves with an object containing a message and a statusCode
+     */
     LinxDevice.prototype.uartClose = function (channel) {
         var typedChannelNum = new Uint8Array(1);
         typedChannelNum[0] = channel;
@@ -1048,13 +1104,18 @@ var LinxDevice = (function () {
     /**************************************************************************
     *   Utilities
     **************************************************************************/
+    /**
+     * Call writeRead on supplied transport and return response.
+     * @param packet the packet to send
+     * @return Promise that resolves with the response packet
+     */
     LinxDevice.prototype.sendPacketAndParseResponse = function (packet) {
         var _this = this;
         console.log('sending packet: ');
         console.log(packet);
         this.packetNumber++;
         return new Promise(function (resolve, reject) {
-            _this.connectionHandlerService.transport.writeRead(_this.deviceAddress, '/', packet, 'binary')
+            _this.transport.writeRead(packet)
                 .then(function (data) {
                 data = new Uint8Array(data);
                 console.log(data);
@@ -1079,12 +1140,24 @@ var LinxDevice = (function () {
             });
         });
     };
+    /**
+     * Get packet size of command.
+     * @param [commandParams] the parameters to send
+     * @return Packet size
+     */
     LinxDevice.prototype.getPacketSize = function (commandParams) {
         if (commandParams == undefined) {
             return 7;
         }
         return 7 + commandParams.length;
     };
+    /**
+     * Generates packet based on packet size, command number, and command parameters.
+     * @param packetSize the size of the packet to send
+     * @param commandNumber the LINX command number for this packet
+     * @param [commandParams] the parameters to send
+     * @return The packet to send
+     */
     LinxDevice.prototype.generatePacket = function (packetSize, commandNumber, commandParams) {
         var packet = new Uint8Array(packetSize);
         packet[0] = 255;
@@ -1103,6 +1176,12 @@ var LinxDevice = (function () {
         packet[packetSize - 1] = this.generateChecksum(packet);
         return packet;
     };
+    /**
+     * Creates a byte array of a specified number with a specific number of bytes.
+     * @param number the number to convert
+     * @param numBytes the number of bytes to represent the number
+     * @return Byte array representation of number
+     */
     LinxDevice.prototype.numberAsByteArray = function (number, numBytes) {
         var byteArray = new Uint8Array(numBytes);
         for (var i = 0; i < numBytes; i++) {
@@ -1110,6 +1189,11 @@ var LinxDevice = (function () {
         }
         return byteArray;
     };
+    /**
+     * Generate checksum from command array.
+     * @param commandArray the packet to send
+     * @return The computed checksum
+     */
     LinxDevice.prototype.generateChecksum = function (commandArray) {
         var checksum = 0;
         var maxVal = Math.pow(2, 8);
@@ -1118,6 +1202,11 @@ var LinxDevice = (function () {
         }
         return checksum % maxVal;
     };
+    /**
+     * Generic promise wrapper for default responses.
+     * @param packet the packet to send
+     * @return Promise that resolves with an object containing a message and a statusCode
+     */
     LinxDevice.prototype.genericReturnHandler = function (packet) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -1166,140 +1255,21 @@ var Return;
 //# sourceMappingURL=linx-device.js.map
 
 /***/ }),
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dist_linx_agent_linx_agent__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dist_linx_agent_linx_agent___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__dist_linx_agent_linx_agent__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__dist_linx_device_linx_device__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__dist_linx_device_linx_device___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__dist_linx_device_linx_device__);
-
-
-window.LinxAgent = __WEBPACK_IMPORTED_MODULE_0__dist_linx_agent_linx_agent__["LinxAgent"];
-window.LinxDevice = __WEBPACK_IMPORTED_MODULE_1__dist_linx_device_linx_device__["LinxDevice"];
-
-/***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var connection_handler_1 = __webpack_require__(0);
-var linx_device_1 = __webpack_require__(1);
-var LinxAgent = (function () {
-    function LinxAgent(agentAddress) {
-        this.devices = [];
-        console.log('AgentService constructor');
-        this.connectionHandlerService = new connection_handler_1.ConnectionHandlerService();
-        if (agentAddress.indexOf('http://') === -1 && agentAddress.indexOf('https://') === -1) {
-            this.agentAddress = 'http://' + agentAddress;
-        }
-        else {
-            this.agentAddress = agentAddress;
-        }
+var GenericTransport = (function () {
+    function GenericTransport() {
     }
-    LinxAgent.prototype.genericResponseHandler = function (endpoint, commandObject) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.connectionHandlerService.transport.writeRead(_this.agentAddress, endpoint, JSON.stringify(commandObject), 'json')
-                .then(function (jsonString) {
-                var data;
-                try {
-                    data = JSON.parse(jsonString);
-                }
-                catch (e) {
-                    reject(e);
-                    return;
-                }
-                if (data == undefined || data.agent == undefined) {
-                    reject(data);
-                    return;
-                }
-                data.agent.forEach(function (val, index, array) {
-                    if (val.statusCode == undefined || val.statusCode !== 0) {
-                        reject(data);
-                        return;
-                    }
-                });
-                resolve(data);
-            })
-                .catch(function (e) {
-                reject(e);
-            });
-        });
-    };
-    LinxAgent.prototype.enumerateDevices = function () {
-        var command = {
-            agent: [
-                {
-                    command: 'enumerateDevices'
-                }
-            ]
-        };
-        return this.genericResponseHandler('/config', command);
-    };
-    LinxAgent.prototype.getAgentInfo = function () {
-        var command = {
-            agent: [
-                {
-                    command: "getInfo"
-                }
-            ]
-        };
-        return this.genericResponseHandler('/config', command);
-    };
-    LinxAgent.prototype.getActiveDevice = function () {
-        var command = {
-            agent: [
-                {
-                    command: "getActiveDevice"
-                }
-            ]
-        };
-        return this.genericResponseHandler('/config', command);
-    };
-    LinxAgent.prototype.setActiveDevice = function (device) {
-        var _this = this;
-        var command = {
-            agent: [
-                {
-                    command: "setActiveDevice",
-                    device: device
-                }
-            ]
-        };
-        return new Promise(function (resolve, reject) {
-            _this.genericResponseHandler('/config', command)
-                .then(function (data) {
-                _this.devices.push(new linx_device_1.LinxDevice(_this.agentAddress));
-                _this.activeDeviceIndex = _this.devices.length - 1;
-                _this.activeDevice = _this.devices[_this.activeDeviceIndex];
-                resolve(data);
-            })
-                .catch(function (e) {
-                reject(e);
-            });
-        });
-    };
-    LinxAgent.prototype.releaseActiveDevice = function () {
-        var command = {
-            agent: [
-                {
-                    command: "releaseActiveDevice"
-                }
-            ]
-        };
-        return this.genericResponseHandler('/config', command);
-    };
-    return LinxAgent;
+    return GenericTransport;
 }());
-exports.LinxAgent = LinxAgent;
-//# sourceMappingURL=linx-agent.js.map
+exports.GenericTransport = GenericTransport;
+//# sourceMappingURL=generic-transport.js.map
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1309,29 +1279,29 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var generic_transport_1 = __webpack_require__(5);
+var linx_device_js_1 = __webpack_require__(0);
 var HttpTransportService = (function (_super) {
     __extends(HttpTransportService, _super);
-    function HttpTransportService() {
+    function HttpTransportService(address, endpoint) {
         _super.call(this);
+        this.address = address;
+        this.endpoint = endpoint;
         this.start = 0;
         this.finish = 0;
         console.log('HttpTransportService constructor');
     }
-    HttpTransportService.prototype.writeRead = function (address, endpoint, data, returnType) {
+    HttpTransportService.prototype.writeRead = function (data) {
         var _this = this;
-        var uri = address + endpoint;
+        var uri = this.address + this.endpoint;
         console.log(uri);
         return new Promise(function (resolve, reject) {
             var XHR = new XMLHttpRequest();
-            // We define what will happen if the data are successfully sent
             XHR.addEventListener("load", function (event) {
                 console.log(event.currentTarget.response);
                 _this.finish = performance.now();
                 console.log('FLIGHT TIME: ' + (_this.finish - _this.start));
                 resolve(event.currentTarget.response);
             });
-            // We define what will happen in case of error
             XHR.addEventListener("error", function (event) {
                 reject(event);
             });
@@ -1342,10 +1312,7 @@ var HttpTransportService = (function (_super) {
             try {
                 XHR.open("POST", uri);
                 XHR.timeout = 5000;
-                if (returnType === 'binary') {
-                    //Set response type as arraybuffer to receive response as bytes
-                    XHR.responseType = 'arraybuffer';
-                }
+                XHR.responseType = 'arraybuffer';
                 _this.start = performance.now();
                 XHR.send(data);
             }
@@ -1355,24 +1322,9 @@ var HttpTransportService = (function (_super) {
         });
     };
     return HttpTransportService;
-}(generic_transport_1.GenericTransportService));
+}(linx_device_js_1.GenericTransport));
 exports.HttpTransportService = HttpTransportService;
 //# sourceMappingURL=http-transport.js.map
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var GenericTransportService = (function () {
-    function GenericTransportService() {
-        console.log('GenericTransportService constructor');
-    }
-    return GenericTransportService;
-}());
-exports.GenericTransportService = GenericTransportService;
-//# sourceMappingURL=generic-transport.js.map
 
 /***/ })
 /******/ ]);

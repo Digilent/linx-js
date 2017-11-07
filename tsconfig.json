@@ -17,10 +17,7 @@
     "outDir": "./dist"
   },
   "files": [
-    "src/connection-handler/connection-handler.ts",
-    "src/linx-agent/linx-agent.ts",
-    "src/linx-device/linx-device.ts",
-    "src/transports/generic-transport.ts",
+    "src/linx-device-manager/linx-device-manager.ts",
     "src/transports/http-transport.ts"
   ]
 }
