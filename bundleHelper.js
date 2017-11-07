@@ -1,2 +1,2 @@
-import { LinxDeviceManager } from './dist/linx-device-manager/linx-device-manager';
-window.LinxDeviceManager = LinxDeviceManager;
+import { LinxDevice } from './dist/linx-device/linx-device';
+window.LinxDevice = LinxDevice;

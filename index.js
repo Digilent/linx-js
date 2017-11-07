@@ -1,1 +1,1 @@
-exports.LinxDeviceManager = require('./dist/linx-device-manager/linx-device-manager').LinxDeviceManager;
+exports.LinxDevice = require('./dist/linx-device/linx-device').LinxDevice;
