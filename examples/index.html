@@ -1,0 +1,71 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>LINX</title>
+    <meta name="description" content="linx-js example">
+    <meta name="author" content="Digilent">
+
+    <!--[if lt IE 9]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <input id="linx-input" placeholder="https://192.168.1.108:4443" />
+    <button id="submit-button">
+        Enumerate
+    </button>
+    <div id="results"></div>
+
+    <script src="../bundle/linx-js.js"></script>
+    <script>
+        function addResult(toAdd) {
+            document.getElementById('results').innerHTML = toAdd;
+        }
+
+        function init() {
+            var linxDevice = new LinxDevice();
+            var resultText = '';
+            document.getElementById('submit-button').onclick = function(event) {
+                resultText = '';
+                linxDevice.open('http', { address: document.getElementById('linx-input').value, endpoint: '/' });
+                linxDevice.getDeviceName()
+                    .then(function(data) {
+                        console.log(data);
+                        resultText += '<h2>' + data.deviceName + '</h2>';
+                        return linxDevice.getLinxApiVersion()
+                    })
+                    .then(function(data) {
+                        console.log(data);
+                        resultText += '<div>LINX Version: ' + [data.major, data.minor, data.subminor].join('.') + '</div>';
+                        return linxDevice.getDeviceId();
+                    })
+                    .then(function(data) {
+                        console.log(data);
+                        resultText += '<div>Device Family: ' + data.deviceFamily + '</div><div>Device Id: ' + data.deviceId + '</div>';
+                        return linxDevice.digitalGetChans();
+                    })
+                    .then(function(data) {
+                        console.log(data);
+                        resultText += '<div>Digital Channels: ' + JSON.stringify(data.chans) + '</div>';
+                        linxDevice.close();
+                        addResult(resultText);
+                    })
+                    .catch(function(e) {
+                        console.log(e);
+                        resultText = JSON.stringify(e);
+                        addResult(resultText);
+                        linxDevice.close();
+                    });
+            }
+        }
+        window.onload = init();
+    </script>
+
+</body>
+
+</html>
