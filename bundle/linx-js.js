@@ -468,6 +468,66 @@ var GenericLinxDevice = (function () {
     *   Analog
     **************************************************************************/
     /**
+     * Gets the valid analog input channels.
+     * @return Promise that resolves with an object containing a message, statusCode, and chans array
+     */
+    GenericLinxDevice.prototype.analogGetInputChans = function () {
+        var _this = this;
+        var packet = this.generatePacket(this.getPacketSize(), 9);
+        return new Promise(function (resolve, reject) {
+            _this.sendPacketAndParseResponse(packet)
+                .then(function (data) {
+                var chans = [];
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
+                    chans.push(data[i + 5]);
+                }
+                resolve({
+                    statusCode: 0,
+                    message: 'ok',
+                    chans: chans
+                });
+            })
+                .catch(function (err) {
+                reject({
+                    statusCode: 1,
+                    message: err,
+                    chans: []
+                });
+            });
+        });
+    };
+    /**
+     * Gets the valid analog output channels.
+     * @return Promise that resolves with an object containing a message, statusCode, and chans array
+     */
+    GenericLinxDevice.prototype.analogGetOutputChans = function () {
+        var _this = this;
+        var packet = this.generatePacket(this.getPacketSize(), 10);
+        return new Promise(function (resolve, reject) {
+            _this.sendPacketAndParseResponse(packet)
+                .then(function (data) {
+                var chans = [];
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
+                    chans.push(data[i + 5]);
+                }
+                resolve({
+                    statusCode: 0,
+                    message: 'ok',
+                    chans: chans
+                });
+            })
+                .catch(function (err) {
+                reject({
+                    statusCode: 1,
+                    message: err,
+                    chans: []
+                });
+            });
+        });
+    };
+    /**
      * Analog read the pinNumber.
      * @param pinNumber the pinNumber you want to read
      * @return Promise that resolves with an object containing a message, statusCode, and value
@@ -653,6 +713,36 @@ var GenericLinxDevice = (function () {
     *   SPI
     **************************************************************************/
     /**
+     * Gets the valid spi channels.
+     * @return Promise that resolves with an object containing a message, statusCode, and chans array
+     */
+    GenericLinxDevice.prototype.spiGetChans = function () {
+        var _this = this;
+        var packet = this.generatePacket(this.getPacketSize(), 15);
+        return new Promise(function (resolve, reject) {
+            _this.sendPacketAndParseResponse(packet)
+                .then(function (data) {
+                var spiChans = [];
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
+                    spiChans.push(data[i + 5]);
+                }
+                resolve({
+                    statusCode: 0,
+                    message: 'ok',
+                    chans: spiChans
+                });
+            })
+                .catch(function (err) {
+                reject({
+                    statusCode: 1,
+                    message: err,
+                    chans: []
+                });
+            });
+        });
+    };
+    /**
      * Open the specified spi channel.
      * @param channel the channel you want to open
      * @return Promise that resolves with an object containing a message and a statusCode
@@ -785,6 +875,36 @@ var GenericLinxDevice = (function () {
     /**************************************************************************
     *   I2C
     **************************************************************************/
+    /**
+     * Gets the valid i2c channels.
+     * @return Promise that resolves with an object containing a message, statusCode, and chans array
+     */
+    GenericLinxDevice.prototype.i2cGetChans = function () {
+        var _this = this;
+        var packet = this.generatePacket(this.getPacketSize(), 14);
+        return new Promise(function (resolve, reject) {
+            _this.sendPacketAndParseResponse(packet)
+                .then(function (data) {
+                var chans = [];
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
+                    chans.push(data[i + 5]);
+                }
+                resolve({
+                    statusCode: 0,
+                    message: 'ok',
+                    chans: chans
+                });
+            })
+                .catch(function (err) {
+                reject({
+                    statusCode: 1,
+                    message: err,
+                    chans: []
+                });
+            });
+        });
+    };
     /**
      * Read on the specified spi channel.
      * @param channel the channel you want to open
@@ -971,6 +1091,36 @@ var GenericLinxDevice = (function () {
     /**************************************************************************
     *   UART
     **************************************************************************/
+    /**
+     * Gets the valid UART channels.
+     * @return Promise that resolves with an object containing a message, statusCode, and chans array
+     */
+    GenericLinxDevice.prototype.uartGetChans = function () {
+        var _this = this;
+        var packet = this.generatePacket(this.getPacketSize(), 13);
+        return new Promise(function (resolve, reject) {
+            _this.sendPacketAndParseResponse(packet)
+                .then(function (data) {
+                var chans = [];
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
+                    chans.push(data[i + 5]);
+                }
+                resolve({
+                    statusCode: 0,
+                    message: 'ok',
+                    chans: chans
+                });
+            })
+                .catch(function (err) {
+                reject({
+                    statusCode: 1,
+                    message: err,
+                    chans: []
+                });
+            });
+        });
+    };
     /**
      * Uart open on the specified channel and initialize to a specific baud rate.
      * @param channel the desired channel

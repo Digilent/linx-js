@@ -1,6 +1,6 @@
 {
   "name": "@digilent/linx-js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "LINX javascript library",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "author": "digilent",
   "license": "MIT",
   "dependencies": {
-    "@digilent/linx-device-js": "0.1.3"
+    "@digilent/linx-device-js": "0.2.0"
   },
   "devDependencies": {    
     "@types/node": "^7.0.12",
