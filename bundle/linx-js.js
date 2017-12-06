@@ -429,7 +429,8 @@ var GenericLinxDevice = (function () {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
                 var returnValues = [];
-                for (var i = 0; i < data[1] - 6; i++) {
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
                     returnValues.push(data[i + 5]);
                 }
                 resolve({
@@ -540,10 +541,21 @@ var GenericLinxDevice = (function () {
         return new Promise(function (resolve, reject) {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
+                var resolution = data[5];
+                var lowByte = 0;
+                var highByte = Math.floor((resolution * 2) / 8);
+                var lowBitOffset = 0;
+                var andVal = Math.pow(2, resolution) - 1;
+                var temp = 0;
+                for (var j = lowByte, k = 0; j <= highByte; j++, k++) {
+                    temp |= data[6 + j] << (k * 8);
+                }
+                var trueVal = (temp) & andVal;
                 resolve({
                     statusCode: 0,
                     message: 'ok',
-                    value: data[5]
+                    resolution: resolution,
+                    value: trueVal
                 });
             })
                 .catch(function (err) {
@@ -568,13 +580,25 @@ var GenericLinxDevice = (function () {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
                 var returnValues = [];
-                for (var i = 0; i < data[1] - 6; i++) {
-                    returnValues.push(data[i + 5]);
+                var packetSize = (data[1] << 8) | data[2];
+                var resolution = data[5];
+                for (var i = 0; i < pinNumbers.length; i++) {
+                    var lowByte = Math.floor((resolution * i) / 8);
+                    var highByte = Math.floor((resolution * (i + 1)) / 8);
+                    var lowBitOffset = (i * resolution) % 8;
+                    var andVal = Math.pow(2, resolution) - 1;
+                    var temp = 0;
+                    for (var j = lowByte, k = 0; j <= highByte; j++, k++) {
+                        temp |= data[6 + j] << (k * 8);
+                    }
+                    var trueVal = (temp >> lowBitOffset) & andVal;
+                    returnValues.push(trueVal);
                 }
                 resolve({
                     statusCode: 0,
                     message: 'ok',
-                    values: returnValues
+                    values: returnValues,
+                    resolution: data[5]
                 });
             })
                 .catch(function (err) {
@@ -634,7 +658,8 @@ var GenericLinxDevice = (function () {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
                 var channels = [];
-                for (var i = 0; i < data[1] - 6; i++) {
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
                     channels.push(data[i + 5]);
                 }
                 resolve({
@@ -854,7 +879,8 @@ var GenericLinxDevice = (function () {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
                 var returnData = [];
-                for (var i = 0; i < data[1] - 6; i++) {
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
                     returnData.push(data[5 + i]);
                 }
                 resolve({
@@ -976,7 +1002,8 @@ var GenericLinxDevice = (function () {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
                 var returnData = [];
-                for (var i = 0; i < data[1] - 6; i++) {
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
                     returnData.push(data[i + 5]);
                 }
                 resolve({
@@ -1227,7 +1254,8 @@ var GenericLinxDevice = (function () {
             _this.sendPacketAndParseResponse(packet)
                 .then(function (data) {
                 var returnData = [];
-                for (var i = 0; i < data[1] - 6; i++) {
+                var packetSize = (data[1] << 8) | data[2];
+                for (var i = 0; i < packetSize - 6; i++) {
                     returnData.push(data[i + 5]);
                 }
                 resolve({
@@ -1300,6 +1328,10 @@ var GenericLinxDevice = (function () {
                 }
                 if (data.length !== packetCalculatedSize) {
                     reject('Invalid packet size');
+                    return;
+                }
+                if (data[4] !== 0) {
+                    reject('Status error');
                     return;
                 }
                 resolve(data);
